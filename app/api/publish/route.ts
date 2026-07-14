@@ -1,4 +1,5 @@
 import { del, put } from "@vercel/blob";
+import { shouldUseBlobStorage } from "@/lib/blob-config";
 import type { Document } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -21,15 +22,20 @@ export async function POST(request: Request) {
   const nextSlug = slug || slugify(document.title);
   const snapshot = JSON.stringify({ ...document, published: { slug: nextSlug, publishedAt: new Date().toISOString() } }, null, 2);
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!shouldUseBlobStorage()) {
     return Response.json({ slug: nextSlug, url: `/share/${nextSlug}`, mode: "local" });
   }
 
-  const blob = await put(`konjac/${nextSlug}.json`, snapshot, {
-    access: "public",
-    contentType: "application/json",
-    allowOverwrite: true,
-  });
+  let blob;
+  try {
+    blob = await put(`konjac/${nextSlug}.json`, snapshot, {
+      access: "public",
+      contentType: "application/json",
+      allowOverwrite: true,
+    });
+  } catch (error) {
+    return new Response(error instanceof Error ? error.message : "Blob publish failed", { status: 500 });
+  }
 
   return Response.json({ slug: nextSlug, url: `/share/${nextSlug}`, blobUrl: blob.url, mode: "blob" });
 }
@@ -38,7 +44,7 @@ export async function DELETE(request: Request) {
   const { slug } = (await request.json()) as { slug?: string };
   if (!slug) return new Response("Slug is required", { status: 400 });
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (shouldUseBlobStorage()) {
     await del(`konjac/${slug}.json`);
   }
 

@@ -1,15 +1,21 @@
 import { list } from "@vercel/blob";
+import { shouldUseBlobStorage } from "@/lib/blob-config";
 
 export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!shouldUseBlobStorage()) {
     return new Response("Blob storage is not configured", { status: 404 });
   }
 
-  const result = await list({ prefix: `konjac/${slug}.json`, limit: 1 });
+  let result;
+  try {
+    result = await list({ prefix: `konjac/${slug}.json`, limit: 1 });
+  } catch (error) {
+    return new Response(error instanceof Error ? error.message : "Blob storage could not be read", { status: 500 });
+  }
   const blob = result.blobs[0];
   if (!blob) return new Response("Snapshot not found", { status: 404 });
 
@@ -23,4 +29,3 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     },
   });
 }
-
