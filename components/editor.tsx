@@ -71,14 +71,10 @@ function Progress({ document, label }: { document: Document; label: string }) {
 
 export function Editor({ id }: Props) {
   const router = useRouter();
-  const leftRef = useRef<HTMLDivElement | null>(null);
-  const rightRef = useRef<HTMLDivElement | null>(null);
-  const syncingRef = useRef(false);
   const selectionRef = useRef<HTMLTextAreaElement | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<BlockStatus | "all">("all");
-  const [syncScroll, setSyncScroll] = useState(true);
   const [busyBlockId, setBusyBlockId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const store = useDocumentStore();
@@ -110,24 +106,16 @@ export function Editor({ id }: Props) {
 
   const currentDocument = document;
 
-  function syncScrollFrom(source: "left" | "right") {
-    if (!syncScroll || syncingRef.current) return;
-    const left = leftRef.current;
-    const right = rightRef.current;
-    if (!left || !right) return;
+  function blockStateClass(block: Block) {
+    if (hoveredId === block.id || selectedId === block.id) {
+      return "border-sky-300 bg-sky-50/80 shadow-sm";
+    }
 
-    const from = source === "left" ? left : right;
-    const to = source === "left" ? right : left;
-    const ratio = from.scrollTop / Math.max(from.scrollHeight - from.clientHeight, 1);
-    syncingRef.current = true;
-    to.scrollTop = ratio * Math.max(to.scrollHeight - to.clientHeight, 1);
-    requestAnimationFrame(() => {
-      syncingRef.current = false;
-    });
-  }
+    if (block.status === "reviewed") {
+      return "border-emerald-200 bg-emerald-50/80";
+    }
 
-  function activeClass(blockId: string) {
-    return hoveredId === blockId || selectedId === blockId ? "border-sky-300 bg-sky-50/80 shadow-sm" : "border-slate-200 bg-white";
+    return "border-slate-200 bg-white";
   }
 
   async function translateBlock(block: Block) {
@@ -222,7 +210,7 @@ export function Editor({ id }: Props) {
     return (
       <section
         key={`${side}-${block.id}`}
-        className={cn("rounded-lg border p-3 transition", activeClass(block.id))}
+        className={cn("flex h-full flex-col rounded-lg border p-3 transition", blockStateClass(block))}
         onMouseEnter={() => setHoveredId(block.id)}
         onMouseLeave={() => setHoveredId(null)}
         onClick={() => setSelectedId(block.id)}
@@ -271,7 +259,7 @@ export function Editor({ id }: Props) {
         )}
 
         {side === "target" ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
             <Button size="sm" onClick={() => translateBlock(block)} disabled={busyBlockId === block.id}>
               <Languages size={14} />
               {busyBlockId === block.id ? t(locale, "translating") : t(locale, "aiTranslate")}
@@ -299,7 +287,7 @@ export function Editor({ id }: Props) {
             </Button>
           </div>
         ) : (
-          <div className="mt-3 flex gap-1.5">
+          <div className="mt-auto flex gap-1.5 pt-3">
             <Button size="sm" onClick={() => splitSelected(block, side)}>
               <Scissors size={14} />
               {t(locale, "split")}
@@ -333,10 +321,6 @@ export function Editor({ id }: Props) {
               <option value="ai_draft">{statusLabel(locale, "ai_draft")}</option>
               <option value="reviewed">{statusLabel(locale, "reviewed")}</option>
             </select>
-            <label className="flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm">
-              <input type="checkbox" checked={syncScroll} onChange={(event) => setSyncScroll(event.target.checked)} />
-              {t(locale, "scrollSync")}
-            </label>
             <SettingsModal />
             <Button size="sm" onClick={translateMissing}>
               <Languages size={15} />
@@ -383,12 +367,18 @@ export function Editor({ id }: Props) {
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-px bg-slate-200">
-        <div ref={leftRef} className="overflow-auto bg-stone-50 p-5" onScroll={() => syncScrollFrom("left")}>
-          <div className="mx-auto flex max-w-3xl flex-col gap-4">{filteredBlocks.map((block) => blockPanel(block, "source"))}</div>
-        </div>
-        <div ref={rightRef} className="overflow-auto bg-stone-50 p-5" onScroll={() => syncScrollFrom("right")}>
-          <div className="mx-auto flex max-w-3xl flex-col gap-4">{filteredBlocks.map((block) => blockPanel(block, "target"))}</div>
+      <div className="min-h-0 flex-1 overflow-auto bg-stone-50 p-5">
+        <div className="mx-auto grid max-w-[1600px] gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div>{t(locale, "source")}</div>
+            <div>{t(locale, "target")}</div>
+          </div>
+          {filteredBlocks.map((block) => (
+            <div key={block.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-4">
+              {blockPanel(block, "source")}
+              {blockPanel(block, "target")}
+            </div>
+          ))}
         </div>
       </div>
     </main>

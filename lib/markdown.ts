@@ -228,7 +228,7 @@ export function exportHtml(document: Document) {
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
     `<title>${escapeHtml(document.title)}</title>`,
-    "<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.75;max-width:760px;margin:48px auto;padding:0 20px;color:#1f2937}h1,h2,h3{line-height:1.25;color:#111827}blockquote{border-left:4px solid #cbd5e1;margin-left:0;padding-left:18px;color:#475569}img{max-width:100%;border-radius:8px}pre{overflow:auto;background:#111827;color:#e5e7eb;padding:16px;border-radius:8px}hr{border:0;border-top:1px solid #e5e7eb;margin:32px 0}</style>",
+    "<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.75;max-width:760px;margin:48px auto;padding:0 20px;color:#1f2937}h1,h2,h3{line-height:1.25;color:#111827}blockquote{border-left:4px solid #cbd5e1;margin-left:0;padding-left:18px;color:#475569}img{max-width:100%;border-radius:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#111827;color:#e5e7eb;padding:16px;border-radius:8px}hr{border:0;border-top:1px solid #e5e7eb;margin:32px 0}</style>",
     "</head>",
     "<body>",
     ...document.blocks.map(renderHtmlBlock),
@@ -236,4 +236,3 @@ export function exportHtml(document: Document) {
     "</html>",
   ].join("\n");
 }
-

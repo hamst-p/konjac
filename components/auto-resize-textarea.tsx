@@ -13,12 +13,26 @@ export const AutoResizeTextarea = forwardRef<HTMLTextAreaElement, Props>(functio
 
   useImperativeHandle(forwardedRef, () => ref.current as HTMLTextAreaElement);
 
-  useEffect(() => {
-    const element = ref.current;
+  function resize(element = ref.current) {
     if (!element) return;
+    element.style.overflow = "hidden";
     element.style.height = "auto";
     element.style.height = `${Math.max(element.scrollHeight, 76)}px`;
+  }
+
+  useEffect(() => {
+    resize();
   }, [value]);
 
-  return <Textarea ref={ref} value={value} onChange={(event) => onChange(event.target.value)} {...props} />;
+  return (
+    <Textarea
+      ref={ref}
+      value={value}
+      onChange={(event) => {
+        resize(event.currentTarget);
+        onChange(event.target.value);
+      }}
+      {...props}
+    />
+  );
 });

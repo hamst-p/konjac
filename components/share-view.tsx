@@ -94,37 +94,33 @@ export function ShareView({ slug }: Props) {
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">{document.title}</h1>
         </div>
       </header>
-      <div className="mx-auto grid max-w-7xl gap-px bg-slate-200 px-0 md:grid-cols-2">
-        <section className="bg-stone-50 p-5 md:p-8">
-          <div className="mb-5 text-sm font-semibold text-slate-500">{t(locale, "source")}</div>
-          <div className="space-y-5">
-            {document.blocks.map((block) => (
+      <div className="mx-auto max-w-7xl p-5 md:p-8">
+        <div className="hidden grid-cols-2 gap-4 px-3 pb-4 text-sm font-semibold text-slate-500 md:grid">
+          <div>{t(locale, "source")}</div>
+          <div>{t(locale, "target")}</div>
+        </div>
+        <div className="space-y-4">
+          {document.blocks.map((block) => (
+            <section key={block.id} className="grid gap-3 md:grid-cols-2 md:items-stretch">
               <article
-                key={`source-${block.id}`}
-                className={cn("rounded-lg border border-transparent p-3 transition", hoveredId === block.id && "border-sky-300 bg-sky-50")}
+                className={cn("h-full rounded-lg border border-transparent bg-white p-3 transition", hoveredId === block.id && "border-sky-300 bg-sky-50")}
                 onMouseEnter={() => setHoveredId(block.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">{t(locale, "source")}</div>
                 <BlockRender block={block} side="source" />
               </article>
-            ))}
-          </div>
-        </section>
-        <section className="bg-stone-50 p-5 md:p-8">
-          <div className="mb-5 text-sm font-semibold text-slate-500">{t(locale, "target")}</div>
-          <div className="space-y-5">
-            {document.blocks.map((block) => (
               <article
-                key={`target-${block.id}`}
-                className={cn("rounded-lg border border-transparent p-3 transition", hoveredId === block.id && "border-sky-300 bg-sky-50")}
+                className={cn("h-full rounded-lg border border-transparent bg-white p-3 transition", hoveredId === block.id && "border-sky-300 bg-sky-50")}
                 onMouseEnter={() => setHoveredId(block.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">{t(locale, "target")}</div>
                 <BlockRender block={block} side="target" />
               </article>
-            ))}
-          </div>
-        </section>
+            </section>
+          ))}
+        </div>
       </div>
     </main>
   );
